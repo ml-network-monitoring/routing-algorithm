@@ -4,7 +4,7 @@ import numpy as np
 import pulp as pl
 import itertools
 import warnings
-import util
+from . import util
 
 class SegmentRoutingSolver:
 
@@ -90,8 +90,7 @@ class SegmentRoutingSolver:
             elif self.tm[i, j] == 0 and tm[i, j] != 0:
                 # assume route this situation by shortest path
                 solution[i, j, i] = tm[i, j]
-                warnings.warn('tm[{},{}]={} while new tm\'[{},{}]={}, create a shotest path flow from {} to {} to accomodate the demand'.format(i, j, self.tm[i, j], i, j, tm[i, j], i, j),
-                              RuntimeWarning)
+                # warnings.warn('tm[{},{}]={} while new tm\'[{},{}]={}, create a shotest path flow from {} to {} to accomodate the demand'.format(i, j, self.tm[i, j], i, j, tm[i, j], i, j), RuntimeWarning)
             else:
                 solution[i, j, :] = 0
         # extract utilization

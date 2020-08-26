@@ -4,4 +4,4 @@ scipy
 matplotlib
 networkx
 pandas
-
+jupyterlab

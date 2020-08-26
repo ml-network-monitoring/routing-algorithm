@@ -1,4 +1,4 @@
-import util
+from . import util
 import itertools
 import numpy as np
 import networkx as nx

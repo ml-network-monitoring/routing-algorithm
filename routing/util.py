@@ -6,8 +6,18 @@ import matplotlib.pyplot as plt
 
 from scipy.io import loadmat
 
-def load_traffic_matrix(timestep=0):
-    tm = loadmat('data/abilene_tm.mat')['X'][timestep, :].reshape(12, 12)
+def load_traffic_matrix(dataset='abilene', timestep=0):
+    tm = loadmat('../../data/data/{}_tm.mat'.format(dataset))['X'][timestep, :]
+    num_flow = tm.shape[1]
+    num_node = int(np.sqrt(tm.shape[1]))
+    tm = tm.reshape(num_node, num_node)
+    return tm
+
+def load_all_traffic_matrix(dataset='abilene', timestep=0):
+    tm = loadmat('../../data/data/{}_tm.mat'.format(dataset))['X']
+    num_flow = tm.shape[1]
+    num_node = int(np.sqrt(tm.shape[1]))
+    tm = tm.reshape(-1, num_node, num_node)
     return tm
 
 def generate_traffic_matrix():
@@ -15,14 +25,15 @@ def generate_traffic_matrix():
     tm = tm - tm * np.eye(12)
     return tm
 
-def load_network_topology():
+def load_network_topology(dataset='abilene'):
     # initialize graph
     G = nx.Graph()
-    # add nodes
-    for i in range(12):
-        G.add_node(i)
-    # load data from csv
-    df       = pd.read_csv('data/abilene_edge.csv', delimiter=' ')
+    # load node data from csv
+    df = pd.read_csv('../../data/topo/{}_node.csv'.format(dataset), delimiter=' ')
+    for i, row in df.iterrows():
+        G.add_node(i, label=row.label, pos=(row.x, row.y))
+    # load edge data from csv
+    df = pd.read_csv('../../data/topo/{}_edge.csv'.format(dataset), delimiter=' ')
     # add weight, capacity, delay to edge attributes
     for _, row in df.iterrows():
         i = row.src
@@ -32,12 +43,11 @@ def load_network_topology():
                          delay=row.delay)
     return G
 
-def draw_network_topology(G, position=None):
-    if position == None:
-        position = nx.spring_layout(G)
-    nx.draw(G, position, node_size=1000, alpha=0.5)
-    nx.draw_networkx_labels(G, position)
-    return position
+def draw_network_topology(G, pos=None):
+    if pos is None:
+        pos = nx.get_node_attributes(G, 'pos')
+    nx.draw(G, pos, node_size=1000, alpha=0.5)
+    nx.draw_networkx_labels(G, pos)
 
 def shortest_path(G, source, target):
     return nx.shortest_path(G, source=source, target=target, weight='weight')
@@ -60,36 +70,39 @@ def get_segments(G):
     return segments
 
 def draw_segment(G, segment, i, j, k):
+    pos = nx.get_node_attributes(G, 'pos')
     plt.subplot(131)
-    position = draw_network_topology(G)
+    draw_network_topology(G, pos)
     plt.title('Network topology')
     plt.subplot(132)
-    draw_network_topology(segment.segment_ik, position=position)
+    draw_network_topology(segment.segment_ik, pos)
     plt.title('Segment path i={} k={}'.format(i, k))
     plt.subplot(133)
-    draw_network_topology(segment.segment_kj, position=position)
+    draw_network_topology(segment.segment_kj, pos)
     plt.title('Segment path k={} j={}'.format(k, j))
 
 def draw_segment_pred(G, segment, i, j, k):
+    pos = nx.get_node_attributes(G, 'pos')
     plt.subplot(231)
     position = draw_network_topology(G)
     plt.title('Network topology')
     plt.subplot(232)
-    draw_network_topology(segment.segment_ik, position=position)
+    draw_network_topology(segment.segment_ik, pos)
     plt.title('Segment path i={} k={}'.format(i, k))
     plt.subplot(233)
-    draw_network_topology(segment.segment_kj, position=position)
+    draw_network_topology(segment.segment_kj, pos)
     plt.title('Segment path k={} j={}'.format(k, j))
 
 def draw_segment_ground_truth(G, segment, i, j, k):
+    pos = nx.get_node_attributes(G, 'pos')
     plt.subplot(234)
     position = draw_network_topology(G)
     plt.title('Network topology')
     plt.subplot(235)
-    draw_network_topology(segment.segment_ik, position=position)
+    draw_network_topology(segment.segment_ik, pos)
     plt.title('Segment path i={} k={}'.format(i, k))
     plt.subplot(236)
-    draw_network_topology(segment.segment_kj, position=position)
+    draw_network_topology(segment.segment_kj, pos)
     plt.title('Segment path k={} j={}'.format(k, j))
 
 def g(segment, u, v):

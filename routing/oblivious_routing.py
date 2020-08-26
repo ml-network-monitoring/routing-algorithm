@@ -1,7 +1,7 @@
-import util
 import itertools
 import pulp as pl
 import numpy as np
+from . import util
 from copy import deepcopy
 
 class ObliviousRoutingSolver:
@@ -29,10 +29,9 @@ class ObliviousRoutingSolver:
             edges_dictionary[i] = (u, v)
 
         # 1) create optimization model of dual problem
-        #    not sure if alpha can be put at variable
         problem = pl.LpProblem('SegmentRouting', pl.LpMinimize)
         theta = pl.LpVariable(name='theta', lowBound=0, upBound=1, cat='Continuous')
-        alpha = pl.LpVariable.dicts(name='alpha', indexs=np.arange(N ** 3), lowBound=0)
+        alpha = pl.LpVariable.dicts(name='alpha', lowBound=0, upBound=1, indexs=np.arange(N ** 3))
         pi = pl.LpVariable.dicts(name='pi', indexs=np.arange(E ** 2), lowBound=0)
 
         # 2) objective function
@@ -46,7 +45,7 @@ class ObliviousRoutingSolver:
                 lb = pl.lpSum([util.g(segments[i][j][k], u, v) * alpha[util.flatten_index(i, j, k, N)] for k in range(N)])
                 for m in range(N):
                     loads = []
-                    for e in range(E):
+                    for e in edges_dictionary:
                         u, v = edges_dictionary[e]
                         load = util.g(segments[i][j][m], u, v) * pi[self.flatten_index(e, e_prime, E)]
                         loads.append(load)
@@ -66,7 +65,7 @@ class ObliviousRoutingSolver:
 
         # 3) constraint function 4
         for i, j in itertools.product(range(N), range(N)):
-            problem += pl.lpSum(alpha[util.flatten_index(i, j, k, N)] for k in range(N)) >= 1
+            problem += pl.lpSum(alpha[util.flatten_index(i, j, k, N)] for k in range(N)) == 1
 
         return problem
 
