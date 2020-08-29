@@ -13,7 +13,7 @@ def main():
         G = util.load_network_topology(dataset)
 
         # limit data
-        X = X[:100, :, :]
+        # X = X[:100, :, :]
 
         def f(x):
             solver = SegmentRoutingSolver(G)
